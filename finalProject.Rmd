@@ -8,21 +8,62 @@ output: html_document
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(prompt=TRUE, comment="", echo=TRUE)
 dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
-
 ```
 
 ## Project Introduction
 
+For this project, we are investigating property and injury claims filed with the Terminal Security Agency (TSA). We hope to determine...[TODO]
 
 
 ## Project Data
 
+The TSA claims dataset we are using is composed of 204,267 rows and 13 columns. There are many empty values so it will be assumed that many of the rows will be discarded depending on what sorts of features will be used for model creation and data exploration.
 
-Data Source: 
+This dataset may be found at the link below:
+https://www.kaggle.com/terminal-security-agency/tsa-claims-database/data
+
 
 ## Initial data exploration
+It should be noted that running the complete.cases() function and counting the total number of complete rows showed that all rows are complete. This means that there are no `NA` values, but through the `summary()` function we can see that there are other values to be aware of. There are a notable number of empty string values, dashes ('-'), and the value `Other`. To avoid unintentionally skewing results, these values will need to be discarded or imputed.
+
+```{r}
+summary(dat)
+```
+
+Another helpful starting function is str():
+
+Through this function, we can see that all features are factors.
+
+We can also determine that there are 204267 rows of data and 13 features.
+One interesting feature is `Claim.Number` as it would be assumed that there should be a unique number for each of the unique rows of data. There are 23 less unique claim numbers than there are rows. This could mean that some of the claims needed to be resubmitted and this should be investigated further to ensure some data is not counted twice.
+
+The features are as follows:
+
+* Continuous Features
+    + Claim.Amount
+    + Close.Amount
+    
+* Categorical Features
+    + Claim.Number
+    + Date.Received
+    + Incident.Date
+    + Airport.Code
+    + Airport.Name
+    + Airline.Name
+    + Claim.Type
+    + Claim.Site
+    + Item
+    + Status
+    + Disposition
+
+```{r}
+str(dat)
+```
 
 
+```{r, echo=TRUE}
+table(dat$Claim.Type)
+```
 
 ## Data cleaning and preprocessing
 
