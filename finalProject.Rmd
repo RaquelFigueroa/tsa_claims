@@ -1,0 +1,54 @@
+---
+title: "TSA Claims"
+author: "Samba Diallo, David Jia, Raquel Figueroa"
+date: "5/5/2018"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(prompt=TRUE, comment="", echo=TRUE)
+dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
+
+```
+
+## Project Introduction
+
+
+
+## Project Data
+
+
+Data Source: 
+
+## Initial data exploration
+
+
+
+## Data cleaning and preprocessing
+
+
+####Empty Strings
+```{r, echo=TRUE}
+
+```
+        
+
+####"N/A" Strings
+```{r, echo=TRUE}
+
+```
+
+
+####"OTHER" Strings
+```{r, echo=TRUE}
+
+```
+
+####"UNKNOWN" Strings
+```{r, echo=TRUE}
+
+```
+
+## Data exploration and visualization
+
+## Conclusions
