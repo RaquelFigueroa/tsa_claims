@@ -69,8 +69,9 @@ table(dat$Claim.Type)
 From what we discovered during the initial data exploration section, we want to alter some of the values in certain columns to describe more cohesively what situations they are describing. 
 
 There are some strange rows in the data so we first delete the errors from the data frame.
+We also delete any row that have Date Received, Airport Name, or Claim Amount as empty strings.
 
-<<<<<<< HEAD
+```{r, echo=TRUE}
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
@@ -79,9 +80,9 @@ dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("$","",dat$Claim.Amount)
 dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
 
-
-=======
->>>>>>> da50fd76d1ca688c1695e2ecbbc2b6d30c2343e2
+dat = dat[dat$Date.Received != "",]
+dat = dat[dat$Airport.Name != "",]
+dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
 ```
 
 We then want to remove all the empty strings and dashes and replace them with "N/A" 
