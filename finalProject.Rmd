@@ -71,10 +71,15 @@ From what we discovered during the initial data exploration section, we want to 
 There are some strange rows in the data so we first delete the errors from the data frame.
 ```{r, echo=TRUE}
 
-badRows1 = c(186743,97232,145145,186744,195600)
-badRows2 = dat$Status == "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date."
-dat = dat[-badRows1,]
-dat = dat[-badRows2,]
+glitchRows = c(186743,97232,145145,186744,195600)
+dat = dat[-glitchRows,]
+
+
+dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
+dat$Claim.Amount = gsub("$","",dat$Claim.Amount)
+dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
+
+
 ```
 
 We then want to remove all the empty strings and dashes and replace them with "N/A" 
