@@ -69,12 +69,13 @@ table(dat$Claim.Type)
 From what we discovered during the initial data exploration section, we want to alter some of the values in certain columns to describe more cohesively what situations they are describing. 
 
 There are some strange rows in the data so we first delete the errors from the data frame.
-```{r, echo=TRUE}
 
-badRows1 = c(186743,97232,145145,186744,195600)
-badRows2 = dat$Status == "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date."
-dat = dat[-badRows1,]
-dat = dat[-badRows2,]
+We delete any row that have Date Received, Airport Name, or Claim Amount as empty strings.
+
+```{r, echo=TRUE}
+dat = dat[dat$Date.Received != "",]
+dat = dat[dat$Airport.Name != "",]
+dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
 ```
 
 We then want to remove all the empty strings and dashes and replace them with "N/A" 
@@ -87,8 +88,6 @@ levels(dat$Status)[levels(dat$Status) %in% c('-','')] <- 'N/A'
 levels(dat$Disposition)[levels(dat$Disposition) %in% c('')] <- 'N/A'
 levels(dat$Close.Amount)[levels(dat$Close.Amount) %in% c('')] <- 'N/A'
 levels(dat$Airport.Code)[levels(dat$Airport.Code) %in% c('-','')] <- 'N/A'
-levels(dat$Date.Received)[levels(dat$Date.Received) %in% c('')] <- 'N/A'
-levels(dat$Airport.Name)[levels(dat$Airport.Name) %in% c('-','')] <- 'N/A'
 levels(dat$Claim.Type)[levels(dat$Claim.Type) %in% c('-','')] <- 'N/A'
 levels(dat$Claim.Site)[levels(dat$Claim.Site) %in% c('-','')] <- 'N/A'
 
