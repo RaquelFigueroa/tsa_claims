@@ -12,7 +12,7 @@ dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/mast
 
 ## Project Introduction
 
-For this project, we are investigating property and injury claims filed with the Terminal Security Agency (TSA). We hope to determine...[TODO]
+For this project, we are investigating property and injury claims filed with the Terminal Security Agency (TSA). We hope to determine patterns and correlations between claims made at airports across the United States...[TODO]
 
 
 ## Project Data
@@ -66,6 +66,8 @@ table(dat$Claim.Type)
 ```
 
 ## Data cleaning and preprocessing
+From what we discovered during the initial data exploration section, we want to alter some of the values in certain columns to describe more cohesively what situations they are describing. 
+
 
 
 ####Empty Strings
@@ -73,6 +75,10 @@ table(dat$Claim.Type)
 
 ```
         
+#### '-' Strings
+```{r, echo=TRUE}
+
+```
 
 ####"N/A" Strings
 ```{r, echo=TRUE}
