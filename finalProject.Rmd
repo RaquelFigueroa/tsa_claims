@@ -77,7 +77,7 @@ dat = dat[-glitchRows,]
 
 
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
-dat$Claim.Amount = gsub("$","",dat$Claim.Amount)
+dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
 
 dat = dat[dat$Date.Received != "",]
