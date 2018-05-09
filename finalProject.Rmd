@@ -75,18 +75,17 @@ We also delete any row that have Date Received, Airport Name, or Claim Amount as
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
-
-dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
-dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
-dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
-
-dat$Close.Amount = gsub(";","",dat$Close.Amount)
-dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
-dat$Close.Amount = gsub(" ","",dat$Close.Amount)
-
 dat = dat[dat$Date.Received != "",]
 dat = dat[dat$Airport.Name != "",]
 dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
+
+dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
+dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
+dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
+
+dat$Close.Amount = gsub(";","",dat$Close.Amount)
+dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
+dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
 ```
 
 We then want to remove all the empty strings and dashes and replace them with "N/A" 
