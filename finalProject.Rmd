@@ -88,21 +88,35 @@ dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
 dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
 ```
 
+### Dealing with Approved in Full in Status
+```{r, echo=TRUE}
+levels(dat$Status)[levels(dat$Status) %in% c("Approve in Full",'Approved')] <- 'Approved'
+
+dat[dat$Status == "Approved",]$Close.Amount  = dat[dat$Status == "Approved",]$Claim.Amount
+dat[dat$Status == "Approved",]$Disposition  = "Approve in Full"
+
+```
+
+
+#### Collapsing Levels
+```{r, echo=TRUE}
+levels(dat$Status)[levels(dat$Status) %in% c('Settled','Settle')] <- 'Settled'
+levels(dat$Status)[levels(dat$Status) %in% c('Denied','Deny')] <- 'Denied'
+
+```
+
+
+
 We then want to remove all the empty strings and dashes and replace them with "N/A" 
-
-
-
 ####"N/A" Strings
 ```{r, echo=TRUE}
 levels(dat$Status)[levels(dat$Status) %in% c('-','')] <- 'N/A'
 levels(dat$Disposition)[levels(dat$Disposition) %in% c('')] <- 'N/A'
-levels(dat$Close.Amount)[levels(dat$Close.Amount) %in% c('')] <- 'N/A'
 levels(dat$Airport.Code)[levels(dat$Airport.Code) %in% c('-','')] <- 'N/A'
 levels(dat$Claim.Type)[levels(dat$Claim.Type) %in% c('-','')] <- 'N/A'
 levels(dat$Claim.Site)[levels(dat$Claim.Site) %in% c('-','')] <- 'N/A'
 
 ```
-
 
 
 
