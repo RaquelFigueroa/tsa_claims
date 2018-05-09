@@ -80,6 +80,10 @@ dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
 
+dat$Close.Amount = gsub(";","",dat$Close.Amount)
+dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
+dat$Close.Amount = gsub(" ","",dat$Close.Amount)
+
 dat = dat[dat$Date.Received != "",]
 dat = dat[dat$Airport.Name != "",]
 dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
