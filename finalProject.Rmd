@@ -81,7 +81,6 @@ dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = gsub(" ","",dat$Claim.Amount)
 
 dat = dat[dat$Date.Received != "",]
-dat = dat[dat$Claim.Amount != "",]
 dat = dat[dat$Airport.Name != "",]
 dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
 ```
