@@ -75,10 +75,6 @@ We also delete any row that have Date Received, Airport Name, or Claim Amount as
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
-dat = dat[dat$Date.Received != "",]
-dat = dat[dat$Airport.Name != "",]
-dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
-
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
@@ -122,7 +118,11 @@ levels(dat$Claim.Site)[levels(dat$Claim.Site) %in% c('-','')] <- 'N/A'
 
 ####Empty Strings
 ```{r, echo=TRUE}
-
+dat = dat[dat$Date.Received != "",]
+dat = dat[dat$Airport.Name != "",]
+dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
+dat = dat[dat$Incident.Date != "",]
+dat = dat[dat$Airline.Name != "",]
 ```
         
 #### '-' Strings
