@@ -75,20 +75,11 @@ We also delete any row that have Date Received, Airport Name, or Claim Amount as
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
-<<<<<<< HEAD
-dat = dat[dat$Date.Received != "",]
-dat = dat[dat$Airport.Name != "",]
-dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
-
-
 takeOut = dat$Status == "In litigation" | dat$Status == "In review" | dat$Status == "Claim has been assigned for further investigation"  | dat$Status == "Claim entered" | dat$Status == "Pending response from claimant" | dat$Status ==  "Closed as a contractor claim"
 dat = dat[-takeOut,]
 isNA = is.na(dat$Close.Amount)
 dat = dat[-isNA,]
 
-
-=======
->>>>>>> c430320a7386a36f395ebbe6daaaca7db2b19bbf
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
