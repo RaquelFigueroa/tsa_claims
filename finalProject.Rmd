@@ -77,6 +77,11 @@ We also delete any row that have Date Received, Airport Name, or Claim Amount as
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
+takeOut = dat$Status == "In litigation" | dat$Status == "In review" | dat$Status == "Claim has been assigned for further investigation"  | dat$Status == "Claim entered" | dat$Status == "Pending response from claimant" | dat$Status ==  "Closed as a contractor claim"
+dat = dat[-takeOut,]
+isNA = is.na(dat$Close.Amount)
+dat = dat[-isNA,]
+
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
@@ -91,7 +96,14 @@ dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
 levels(dat$Status)[levels(dat$Status) %in% c("Approve in Full",'Approved')] <- 'Approved'
 
 dat[dat$Status == "Approved",]$Close.Amount  = dat[dat$Status == "Approved",]$Claim.Amount
+
 dat[dat$Status == "Approved",]$Disposition  = "Approve in Full"
+
+#THIS DOESNT WORK RIGHT HERE FOR SOME REASON
+levels(dat$Disposition) = c(levels(dat$Disposition), "Canceled")
+dat[dat$Status == "Canceled",]$Disposition  = "Canceled"
+
+ dat[dat$Status == "Canceled" | dat$Status == "Denied",]$Close.Amount  = 0 
 
 ```
 
