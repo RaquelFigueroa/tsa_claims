@@ -1,5 +1,5 @@
 ---
-title: "TSA Claims"
+title: "Factors leading to an Approved TSA Claim"
 author: "Samba Diallo, David Jia, Raquel Figueroa"
 date: "5/13/2018"
 output: html_document
@@ -7,6 +7,8 @@ output: html_document
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(prompt=TRUE, comment="", echo=TRUE)
+library(rpart)
+library(rpart.plot)
 dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
 ```
 
@@ -142,10 +144,7 @@ apply(dat,2,function(x){
 
 ```
 
-####"UNKNOWN" Strings
-```{r, echo=TRUE}
 
-```
 
 ## Data exploration and visualization
 
