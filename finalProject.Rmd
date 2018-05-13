@@ -281,14 +281,27 @@ dat = dat[keepRows,]
 
 ## Data exploration and visualization
 
+Our investigation revolves around whether a claim filed with TSA is settled, approved in full, or denied. The initial data exploration looks into the proportion of claims that are denied or not.
+Here we can see the majority of claims are denied and at a greater extent than claims being approved in full and settled combined. 
+``` {r}
+barplot(table(dat$Disposition), col = "red4")
+```
+
+***
+
+When plotting the claim amounts and close amounts, we can see that there are some noticeable trends. Of course, there is a strong line along the x-axis at the y value of zero. This indicates the claim amounts that were denied, resulting in a close amount of zero. There is also a line along the diagonal of the plot, indicating claim amounts that were approved in the full amount, so the claim amount value is equal to the final close amount. 
+
+Interestingly, there are some data points where the final close amount is greater than the filed claim amount. This occurence is seen in lower claim amount values and may be due to the fact that some claim amounts were rounded to the nearest dollar when the claims were closed.
 
 ``` {r}
-
+plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 0.995)), ylim = c(0, 10000), pch = ".", main = "Claim Amount Values vs. Close Amount", xlab = "Claim Amount Filed", ylab = "Final Close Amount", col = "navy")
 ```
+
+
 
 ## Conclusions
 
-```{r}
+```
 #test stuff:
 dat[dat$Claim.Amount == 0, c("Disposition", "Close.Amount", "Claim.Amount")]
 ```
