@@ -26,20 +26,17 @@ https://www.kaggle.com/terminal-security-agency/tsa-claims-database/data
 
 
 ## Initial data exploration
-It should be noted that running the complete.cases() function and counting the total number of complete rows showed that all rows are complete. This means that there are no `NA` values, but through the `summary()` function we can see that there are other values to be aware of. There are a notable number of empty string values, dashes ('-'), and the value `Other`. To avoid unintentionally skewing results, these values will need to be discarded or imputed.
+It should be noted that running the `complete.cases()` function and counting the total number of complete rows showed that all rows are complete. This means that there are no `NA` values, but through the `summary()` function we can see that there are other values to be aware of. There are a notable number of empty string values, dashes ('-'), and the value `Other`. To avoid unintentionally skewing results, these values will need to be discarded or imputed.
 
-```{r}
-summary(dat)
-```
+***
 
-Another helpful starting function is str():
-
+Another helpful starting function is `str()`.
 Through this function, we can see that all features are factors.
 
 We can also determine that there are 204267 rows of data and 13 features.
-One interesting feature is `Claim.Number` as it would be assumed that there should be a unique number for each of the unique rows of data. There are 23 less unique claim numbers than there are rows. This could mean that some of the claims needed to be resubmitted and this should be investigated further to ensure some data is not counted twice.
+One interesting feature is `Claim.Number` as it would be assumed that there should be a unique number for each of the unique rows of data. There are 23 less unique claim numbers than there are rows. This could mean that some of the claims needed to be resubmitted and this should be investigated further to ensure some data is not counted more than once.
 
-The features are as follows:
+The data features are as follows:
 
 * Continuous Features
     + Claim.Amount
@@ -58,24 +55,20 @@ The features are as follows:
     + Status
     + Disposition
 
-```{r}
-str(dat)
-```
+***
 
+## Data Cleaning and Preprocessing
 
+While exploring the data, we determined that many of the empty string values or dashes will either need to be deleted or imputed with values from other columns of the same row. For example, if a row had an empty `Status` value but a `Disposition` value of "Denied" then the value of `Status` was set to equal that of `Disposition`. If both `Status` and Disposition` were empty, then a final action could not be confidently determined and those rows were deleted from the dataset.
+
+The dollar amounts for `Claim.Amount` and `Close.Amount` used characters that made them unusable. The dollar amounts were processed to look like double values so they may be visualizaed later in the project.
+
+There are some rows in the dataset that did not contain data but information about the dataset instead. These rows were deleted to prevent any future errors when exploring the data.
+
+There were also some very large `Claim.Amount` values that belonged to claimes that were denied. Any `Claim.Amount` value greater than `150000.00` was deleted from the data set.
+
+After the dataset is cleaned and preprocessed, `86,285` rows remain.
 ```{r, echo=TRUE}
-table(dat$Claim.Type)
-```
-
-## Data cleaning and preprocessing
-From what we discovered during the initial data exploration section, we want to alter some of the values in certain columns to describe more cohesively what situations they are describing. 
-
-There are some strange rows in the data so we first delete the errors from the data frame.
-We also delete any row that have Date Received, Airport Name, or Claim Amount as empty strings.
-
-```{r, echo=TRUE}
-dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
-
 # Delete rows with anomalous formats
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
@@ -235,11 +228,11 @@ new.close = apply(dat, 1, function(x){
 })
 dat$Close.Amount = new.close
 
-
-# If Status is "Settled" and Disposition == "" and Close.Amount == "", delete row
+# If Status is "Settled" and Disposition == "" and Close.Amount = "", delete row
 keepRows = dat$Status != "Settled" | dat$Disposition != "" | dat$Close.Amount != ""
 dat = dat[keepRows,]
 dat$Status = factor(dat$Status)
+
 
 # Delete any final rows with empty values
 keepRows = dat$Claim.Amount != ""
@@ -251,6 +244,18 @@ dat = dat[keepRows,]
 keepRows = dat$Date.Received != ""
 dat = dat[keepRows,]
 
+# Delete unnecessary levels
+dat$Disposition = factor(dat$Disposition)
+dat$Claim.Number = factor(dat$Claim.Number)
+dat$Date.Received = factor(dat$Date.Received)
+dat$Incident.Date = factor(dat$Incident.Date)
+dat$Airport.Code= factor(dat$Airport.Code)
+dat$Airport.Name= factor(dat$Airport.Name)
+dat$Airline.Name= factor(dat$Airline.Name)
+dat$Claim.Type= factor(dat$Claim.Type)
+dat$Claim.Site= factor(dat$Claim.Site)
+dat$Item= factor(dat$Item)
+
 
 # Format Claim.Amount and Close.Amount values
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
@@ -260,31 +265,30 @@ dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
 dat$Close.Amount = gsub(";","",dat$Close.Amount)
 dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
 dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
+
+# Delete anomalous Claim.Amount values
+keepRows = dat$Claim.Amount < 164500.00
+dat = dat[keepRows,]
+
+# Delete remaining rows where Claim.Amount is `0`
+keepRows = dat$Claim.Amount > 0
+dat = dat[keepRows,]
 ```
 
-
-
-
-
-
-
-
-
-
-
-####"OTHER" Strings
-```{r, echo=TRUE}
-
-```
+***
 
 
 
 ## Data exploration and visualization
 
+
+``` {r}
+
+```
+
 ## Conclusions
 
 ```{r}
 #test stuff:
-table(dat$Status, dat$Disposition)
-dat[dat$Status == "Denied" & dat$Close.Amount == "$0.00 ", c("Disposition", "Close.Amount", "Claim.Amount")]
+dat[dat$Claim.Amount == 0, c("Disposition", "Close.Amount", "Claim.Amount")]
 ```
