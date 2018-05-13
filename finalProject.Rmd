@@ -240,14 +240,19 @@ dat$Close.Amount = new.close
 keepRows = dat$Status != "Settled" | dat$Disposition != "" | dat$Close.Amount != ""
 dat = dat[keepRows,]
 dat$Status = factor(dat$Status)
-#=============================================================================
+
+# Delete any final rows with empty values
+keepRows = dat$Claim.Amount != ""
+dat = dat[keepRows,]
+
+keepRows = dat$Incident.Date != ""
+dat = dat[keepRows,]
+
+keepRows = dat$Date.Received != ""
+dat = dat[keepRows,]
 
 
-
-
-
-
-
+# Format Claim.Amount and Close.Amount values
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
 dat$Claim.Amount = as.numeric(gsub(" ","",dat$Claim.Amount))
@@ -257,16 +262,7 @@ dat$Close.Amount = gsub("[$]","",dat$Close.Amount)
 dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
 ```
 
-### Dealing with Approved in Full in Status
-```{r, echo=TRUE}
 
-#THIS DOESNT WORK RIGHT HERE FOR SOME REASON
-#levels(dat$Disposition) = c(levels(dat$Disposition), "Canceled")
-#dat[dat$Status == "Canceled",]$Disposition  = "Canceled"
-
-#dat[dat$Status == "Canceled" | dat$Status == "Denied",]$Close.Amount  = 0 
-
-```
 
 
 
