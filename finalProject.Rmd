@@ -122,8 +122,6 @@ new.claim = apply(dat, 1, function(x){
 })
 
 new.close = apply(dat, 1, function(x){
-  new.claim <- vector()
-  new.close <- vector()
     if (x["Disposition"] == "Approve in Full") {
       if (x["Claim.Amount"] != "" & x["Close.Amount"] == ""){
         x["Close.Amount"] = x["Claim.Amount"]
@@ -168,18 +166,83 @@ new.close = apply(dat, 1, function(x){
 dat$Status = new.status 
 dat$Disposition = new.disposition
 dat$Close.Amount = new.close
+
+
+# If Status is "Insufficient..." and Disposition is "Denied", set Status = "Denied" and Close.Amount == "$0.00"
+new.status = apply(dat, 1, function(x){
+    if (x["Status"] == "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date." & x["Disposition"] == "Denied") {
+      x["Status"] = "Denied"
+    }
+  x["Status"]
+})
+
+new.close = apply(dat, 1, function(x){
+    if (x["Status"] == "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date." & x["Disposition"] == "Denied") {
+      x["Close.Amount"] = "$0.00"
+    }
+  x["Close.Amount"]
+})
+
+dat$Status = new.status 
+dat$Close.Amount = new.close
+
+
+# If Status is "Insufficient..." and Disposition is "Approve in Full", set Status = "Approved"
+new.status = apply(dat, 1, function(x){
+    if (x["Status"] == "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date." & x["Disposition"] == "Approve in Full") {
+      x["Status"] = "Approved"
+    }
+  x["Status"]
+})
+
+dat$Status = new.status 
 dat$Status = factor(dat$Status)
 
+
+# If Status is "Insufficient..." delete rows
+keepRows = dat$Status != "Insufficient; one of the following items required: sum certain; statement of fact; signature; location of incident; and date."
+dat = dat[keepRows,]
+
+
+# If Status is "Denied" set Close.Amount = "$0.00"
+new.close = apply(dat, 1, function(x){
+    if (x["Status"] == "Denied" & x["Close.Amount"] != "$0.00") {
+      x["Close.Amount"] = "$0.00"
+    }
+    if (x["Close.Amount"] == "$0.00 "){
+      x["Close.Amount"] == "$0.00"
+    }
+  x["Close.Amount"]
+})
+
+dat$Close.Amount = new.close
+
+# If Status is "Denied" and Close.Amount = "$0.00", set Disposition = "Denied"
+new.disposition = apply(dat, 1, function(x){
+    if (x["Status"] == "Denied" & x["Close.Amount"] == "$0.00" & x["Disposition"] == "") {
+      x["Disposition"] = "Denied"
+    }
+  x["Disposition"]
+})
+dat$Disposition = new.disposition
+
+# If Status is Close.Amount = "$0.00 " and Disposition = "Approve in Full" set Close.Amount to equal Claim.Amount
+new.close = apply(dat, 1, function(x){
+    if (x["Close.Amount"] == "$0.00 " & x["Disposition"] == "Approve in Full") {
+      x["Close.Amount"] = x["Claim.Amount"]
+    }
+  x["Close.Amount"]
+})
+dat$Close.Amount = new.close
+
+
+# If Status is "Settled" and Disposition == "" and Close.Amount == "", delete row
+keepRows = dat$Status != "Settled" | dat$Disposition != "" | dat$Close.Amount != ""
+dat = dat[keepRows,]
+dat$Status = factor(dat$Status)
 #=============================================================================
 
-# Consolidate Status and Disposition values
 
-# Make sure all variants of Disposition value "Settled" are the same value
-
-# If row has a Claim.Amount with value "" or "-" and a Disposition of   has value of "", "-", or "Other:
-keepRows = dat$Item != "" & dat$Item != "-" & dat$Item != "Other"
-sum(keepRows)
-dat = dat[keepRows,]
 
 
 
@@ -227,5 +290,5 @@ dat$Close.Amount = as.numeric(gsub(" ","",dat$Close.Amount))
 ```{r}
 #test stuff:
 table(dat$Status, dat$Disposition)
-dat[dat$Status == "Approved" & dat$Disposition == "Approve in Full", c("Disposition", "Close.Amount", "Claim.Amount")]
+dat[dat$Status == "Denied" & dat$Close.Amount == "$0.00 ", c("Disposition", "Close.Amount", "Claim.Amount")]
 ```
