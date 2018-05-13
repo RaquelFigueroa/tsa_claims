@@ -74,13 +74,70 @@ There are some strange rows in the data so we first delete the errors from the d
 We also delete any row that have Date Received, Airport Name, or Claim Amount as empty strings.
 
 ```{r, echo=TRUE}
+dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
+
+# Delete rows with anomalous formats
 glitchRows = c(186743,97232,145145,186744,195600)
 dat = dat[-glitchRows,]
 
-takeOut = dat$Status == "In litigation" | dat$Status == "In review" | dat$Status == "Claim has been assigned for further investigation"  | dat$Status == "Claim entered" | dat$Status == "Pending response from claimant" | dat$Status ==  "Closed as a contractor claim"
-dat = dat[-takeOut,]
-isNA = is.na(dat$Close.Amount)
-dat = dat[-isNA,]
+# Delete rows where Airport.Code and Airport.Name have values "" or "-":
+keepRows = dat$Airport.Code != "" & dat$Airport.Code != "-" & dat$Airport.Name != "" & dat$Airport.Name != "-"
+dat = dat[keepRows,]
+
+# Delete rows where Airline.Name  has value of "" or "-":
+keepRows = dat$Airline.Name != "" & dat$Airline.Name != "-"
+dat = dat[keepRows,]
+
+# Delete rows where Claim.Type  has value of "" or "-":
+keepRows = dat$Claim.Type != "" & dat$Claim.Type != "-"
+dat = dat[keepRows,]
+
+# Delete rows where Claim.Site  has value of "", "-", or "Other:
+keepRows = dat$Claim.Site != "" & dat$Claim.Site != "-" & dat$Claim.Site != "Other"
+dat = dat[keepRows,]
+
+# Delete rows where Item  has value of "", "-", or "Other:
+keepRows = dat$Item != "" & dat$Item != "-" & dat$Item != "Other"
+dat = dat[keepRows,]
+
+# Make sure all similar variants of Status values are consolidated and delete values not applicable
+keepRows = dat$Status != "In litigation" & dat$Status != "In review" & dat$Status != "Claim has been assigned for further investigation"  & dat$Status != "Claim entered" & dat$Status != "Pending response from claimant" & dat$Status !=  "Closed as a contractor claim" & dat$Status != "Canceled"
+dat = dat[keepRows,]
+levels(dat$Status)[levels(dat$Status) %in% c('Settled','Settle')] <- 'Settled'
+levels(dat$Status)[levels(dat$Status) %in% c('Denied','Deny')] <- 'Denied'
+dat$Status = factor(dat$Status)
+
+# Make sure all similar variants of Disposition values are consolidated
+levels(dat$Disposition)[levels(dat$Disposition) %in% c('Settled','Settle')] <- 'Settled'
+levels(dat$Disposition)[levels(dat$Disposition) %in%  c('Denied','Deny')] <- 'Denied'
+
+
+# If Disposition is "Approve in Full" and Claim.Amount or Close.Amount is not# If Disposition is "Approve in Full" and Claim.Amount or Close.Amount is not ""
+
+apply(dat, 1, function(x){
+  
+    if (x["Disposition"] == "Approve in Full") {
+      if (x["Claim.Amount"] == "" & x["Close.Amount"] != "") {
+        x["Claim.Amount"] = x["Close.Amount"]
+      }
+      else if (x["Claim.Amount"] != "" & x["Close.Amount"] == ""){
+        x["Close.Amount"] = x["Claim.Amount"]
+      }
+  }
+})
+
+# Consolidate Status and Disposition values
+
+# Make sure all variants of Disposition value "Settled" are the same value
+
+# If row has a Claim.Amount with value "" or "-" and a Disposition of   has value of "", "-", or "Other:
+keepRows = dat$Item != "" & dat$Item != "-" & dat$Item != "Other"
+sum(keepRows)
+dat = dat[keepRows,]
+
+
+
+
 
 dat$Claim.Amount = gsub(";","",dat$Claim.Amount)
 dat$Claim.Amount = gsub("[$]","",dat$Claim.Amount)
@@ -108,46 +165,10 @@ dat[dat$Status == "Canceled",]$Disposition  = "Canceled"
 ```
 
 
-#### Collapsing Levels
-```{r, echo=TRUE}
-levels(dat$Status)[levels(dat$Status) %in% c('Settled','Settle')] <- 'Settled'
-levels(dat$Status)[levels(dat$Status) %in% c('Denied','Deny')] <- 'Denied'
-
-```
 
 
 
-We then want to remove all the empty strings and dashes and replace them with "N/A" 
-####"N/A" Strings
-```{r, echo=TRUE}
-levels(dat$Status)[levels(dat$Status) %in% c('-','')] <- 'N/A'
-levels(dat$Disposition)[levels(dat$Disposition) %in% c('')] <- 'N/A'
-levels(dat$Airport.Code)[levels(dat$Airport.Code) %in% c('-','')] <- 'N/A'
-levels(dat$Claim.Type)[levels(dat$Claim.Type) %in% c('-','')] <- 'N/A'
-levels(dat$Claim.Site)[levels(dat$Claim.Site) %in% c('-','')] <- 'N/A'
 
-```
-
-
-
-####Empty Strings
-```{r, echo=TRUE}
-dat = dat[dat$Date.Received != "",]
-dat = dat[dat$Airport.Name != "",]
-dat = dat[dat$Claim.Amount != "" & dat$Claim.Amount != "-",]
-dat = dat[dat$Incident.Date != "",]
-dat = dat[dat$Airline.Name != "",]
-```
-        
-#### '-' Strings
-```{r, echo=TRUE}
-
-apply(dat,2,function(x){
-  levels(x)[levels(x) %in% c('-','', ' ')] <- 'N/A'
-})
-
-
-```
 
 
 
@@ -161,3 +182,9 @@ apply(dat,2,function(x){
 ## Data exploration and visualization
 
 ## Conclusions
+
+```{r}
+#test stuff:
+table(dat$Status, dat$Disposition)
+dat[dat$Status == "Approved" & dat$Disposition == "Approve in Full", c("Disposition", "Close.Amount", "Claim.Amount")]
+```
