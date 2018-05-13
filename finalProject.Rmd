@@ -299,14 +299,48 @@ plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 
 
 ***
 
-A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
+A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded for each claim filed with the TSA. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
 
-Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims those were approved in full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were closed for the full amount.
+Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims that were approved-in-full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were approved-in-full and were closed for the full amount.
+
 ``` {r}
 dat$Percent.Closed = 100 * dat$Close.Amount / dat$Claim.Amount
 plot(density(100*dat$Close.Amount/dat$Claim.Amount), xlim = c(-10, 105), main = "Density Plot of Percent Claim Amount Awarded")
 ```
 
+***
+
+Another point of interest with the data is the locations of property damage and loss in the airport and their relation to the results of a claim filed. There are only three claims that took place outside of the checkpoint area and checked baggage. All three of those claims were reimbursed in full. The three claims are displayed in slightly larger dots in the graph below. The checked baggage and checkpoint claims seem evenly dispersed, but it could also be a useful predictor to test in a model. there may be some correlation between airport site and if a claim is denied, approved in full, or settled for a lesser amount.
+
+The numbers of claims per airport location are listed in following table:
+
+Airport Location | Number of Claims
+------------------- | ---------------
+Bus Station           | 1
+Motor Vehicle        | 2 
+Checkpoint        | 14754  
+Checked Baggage    | 71528
+
+``` {r}
+plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 0.925)), ylim = c(0, 1700), pch = ".", main = "Claim Amount Values vs. Close Amount by Airport Site", xlab = "Claim Amount Filed", ylab = "Final Close Amount", col = "navy")
+
+points(Close.Amount ~ Claim.Amount, data = dat[dat$Claim.Site == "Checked Baggage",],pch = ".", col = "red4")
+
+points(Close.Amount ~ Claim.Amount, data = dat[dat$Claim.Site == "Checkpoint",], pch = ".",col = "mediumblue")
+
+points(Close.Amount ~ Claim.Amount, data = dat[dat$Claim.Site == "Motor Vehicle",], pch = 20, col = "orange")
+
+points(Close.Amount ~ Claim.Amount, data = dat[dat$Claim.Site == "Bus Station",], pch = 20, col = "yellowgreen")
+
+sites = c("Bus Station", "Motor Vehicle", "Checkpoint", "Checked Baggage")
+col.sites = c("yellowgreen", "orange", "mediumblue", "red4")
+
+legend('topleft',legend = sites, col=col.sites, pch=19)
+
+```
+
+
+***
 
 ## Conclusions
 
