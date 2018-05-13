@@ -307,6 +307,23 @@ dat$Percent.Closed = 100 * dat$Close.Amount / dat$Claim.Amount
 plot(density(100*dat$Close.Amount/dat$Claim.Amount), xlim = c(-10, 105), main = "Density Plot of Percent Claim Amount Awarded")
 ```
 
+***
+
+Now we explore different claim types and the percentage of the time they are accepted or settled. We use the table function in order to get the number of approved,settled, and denied claims based on claim type, then use prop.table in order to get the percentages of those counts by claim type.
+
+``` {r}
+# GET MOST OFTEN APPROVED AND SETTLED CLAIMS BAISED ON CLAIM TYPE
+
+byType = prop.table(table(dat$Status,dat$Claim.Type),2)
+byType = byType[,c(-1,-2,-3)]
+
+par(mar=c(5,12,4,2))
+barplot(byType, main="Car Distribution by Gears and VS",
+  xlab="Percentage of Claims
+  Green = Approved, Yellow = Settled, Red = Denied", col=c("green","yellow","red4"), beside=TRUE, horiz=TRUE, las=1)
+
+```
+I decided to exclude Complaint, Employee Loss, and Motor Vehicle claims from this graph because they dont relate to the type of claims that someone trying to scam the system would make. In this graph we see that not many claims get fully approved when you claim for personal injury but many get settled. 
 
 ## Conclusions
 
