@@ -297,6 +297,15 @@ Interestingly, there are some data points where the final close amount is greate
 plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 0.995)), ylim = c(0, 10000), pch = ".", main = "Claim Amount Values vs. Close Amount", xlab = "Claim Amount Filed", ylab = "Final Close Amount", col = "navy")
 ```
 
+***
+
+A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
+
+Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims those were approved in full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were closed for the full amount.
+``` {r}
+dat$Percent.Closed = 100 * dat$Close.Amount / dat$Claim.Amount
+plot(density(100*dat$Close.Amount/dat$Claim.Amount), xlim = c(-10, 105), main = "Density Plot of Percent Claim Amount Awarded")
+```
 
 
 ## Conclusions
