@@ -304,11 +304,8 @@ plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 
 
 ***
 
-<<<<<<< HEAD
-=======
 ### Percent Claim Amount Awarded
 
->>>>>>> 21f0f6854161c263157aad349222b933bf5fe99c
 A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded for each claim filed with the TSA. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
 
 Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims that were approved-in-full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were approved-in-full and were closed for the full amount.
