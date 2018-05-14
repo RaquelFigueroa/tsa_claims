@@ -11,6 +11,8 @@ library(rpart)
 library(rpart.plot)
 library(e1071)
 dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
+source("https://raw.githubusercontent.com/grbruns/cst383/master/lin-regr-util.R")
+set.seed(123)
 ```
 
 ## Project Introduction
@@ -277,13 +279,9 @@ dat = dat[keepRows,]
 
 # Change Settle and Approve to Full to Approved for Predictions
 dat$DeniedApproved = factor(ifelse(dat$Disposition == "Denied", "denied", "Approved"))
-
-set.seed(123)
 ```
 
 ***
-
-
 
 ## Data exploration and visualization
 
@@ -295,6 +293,7 @@ barplot(table(dat$Disposition), col = "red4")
 
 ***
 
+### Claim Amount vs. Close Amount
 When plotting the claim amounts and close amounts, we can see that there are some noticeable trends. Of course, there is a strong line along the x-axis at the y value of zero. This indicates the claim amounts that were denied, resulting in a close amount of zero. There is also a line along the diagonal of the plot, indicating claim amounts that were approved in the full amount, so the claim amount value is equal to the final close amount. 
 
 Interestingly, there are some data points where the final close amount is greater than the filed claim amount. This occurence is seen in lower claim amount values and may be due to the fact that some claim amounts were rounded to the nearest dollar when the claims were closed.
@@ -305,20 +304,20 @@ plot(dat$Claim.Amount, dat$Close.Amount, xlim = c(0, quantile(dat$Claim.Amount, 
 
 ***
 
-A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
+### Percent Claim Amount Awarded
+
 A `Percent.Closed` column is created to indicate the percentage of the claim amount awarded for each claim filed with the TSA. A zero amount indicates that the claim was denied and no amount of claim money was awarded. A `Percent.Closed` amount of `100` indicates that 100% of the claim amount requested was awarded, so the claim was `Approved in Full`.  
 
 Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims that were approved-in-full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were approved-in-full and were closed for the full amount.
 
-Graphing the density of `Percent.Closed` shows three distinct bumps: at `0`, `50`, and `100`. The highest bump is around the `0` mark, further enforcing that that the number of denied claims is larger then the numbers of claims those were approved in full and settled. The bump at the `50` mark shows that a fairly large amount of claims were settled at a value of about 50% of the initial claim amount filed. The last bump at the `100` mark indicates that many claims were closed for the full amount.
 ``` {r}
 dat$Percent.Closed = 100 * dat$Close.Amount / dat$Claim.Amount
 plot(density(100*dat$Close.Amount/dat$Claim.Amount), xlim = c(-10, 105), main = "Density Plot of Percent Claim Amount Awarded")
 ```
 
 ***
+### Claim Types and Acceptance Rates
 
-<<<<<<< HEAD
 Now we explore different claim types and the percentage of the time they are accepted or settled. We use the table function in order to get the number of approved,settled, and denied claims based on claim type, then use prop.table in order to get the percentages of those counts by claim type.
 
 ``` {r}
@@ -333,9 +332,15 @@ barplot(byType, main="Car Distribution by Gears and VS",
   Green = Approved, Yellow = Settled, Red = Denied", col=c("green","yellow","red4"), beside=TRUE, horiz=TRUE, las=1)
 
 ```
+
 I decided to exclude Complaint, Employee Loss, and Motor Vehicle claims from this graph because they dont relate to the type of claims that someone trying to scam the system would make. In this graph we see that not many claims get fully approved when you claim for personal injury but many get settled. 
-=======
+
+
+***
+### Airport Locations
+
 Another point of interest with the data is the locations of property damage and loss in the airport and their relation to the results of a claim filed. There are only three claims that took place outside of the checkpoint area and checked baggage. All three of those claims were reimbursed in full. The three claims are displayed in slightly larger dots in the graph below. The checked baggage and checkpoint claims seem evenly dispersed, but it could also be a useful predictor to test in a model. there may be some correlation between airport site and if a claim is denied, approved in full, or settled for a lesser amount.
+
 
 The numbers of claims per airport location are listed in following table:
 
@@ -364,20 +369,21 @@ legend('topleft',legend = sites, col=col.sites, pch=19)
 
 ```
 
+***
+
+## Models
 
 ***
->>>>>>> 4321dbb2dcc550d83447bcb125fada4ab49d72b0
 
 ## Model 1 - Naive Bayes
 
 ```{r}
-# Split the data into training and test with 8:2 ratio
-n = nrow(dat)
-tr_rows = sample(1:n, 0.8*n)
-tr_dat = dat[tr_rows,]
-te_dat = dat[-tr_rows,]
+# Split the data into training and test with 3:1 ratio
+splits = split_data(dat, frac=c(3,1))
+tr_dat = splits[[1]]
+te_dat = splits[[2]]
 # fitting model
-fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+fit = naiveBayes(DeniedApproved ~ Claim.Amount + Airport.Name + Airline.Name, data=tr_dat)
 # compute confusion matrix
 predicts = predict(fit, newdata=te_dat)
 actuals = te_dat$DeniedApproved
@@ -385,6 +391,8 @@ conf_mtx = table(predicts, actuals)
 conf_mtx
 mean(predicts == actuals)
 ```
+
+
 
 ```{r}
 plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
@@ -398,11 +406,11 @@ legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","bl
 te_errs = c()
 tr_errs = c()
 te_actual = te_dat$DeniedApproved
-tr_sizes = seq(100, nrow(tr_dat), length.out=10)
+tr_sizes = seq(1000, nrow(tr_dat), length.out=1000)
 for (tr_size in tr_sizes) {
   tr_dat1 = tr_dat[1:tr_size,]
   tr_actual = tr_dat1$DeniedApproved
-  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat1)
 
   # error on training set
   tr_predicted = predict(fit, tr_dat1)
@@ -416,11 +424,17 @@ for (tr_size in tr_sizes) {
 }
 ```
 
+```{r}
+plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 1", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
+lines(te_errs, col="blue", type="l")
+legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+```
+
 ## Model 2 - Naive Bayes
 
 ```{r}
 # Fitting model
-fit2 = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+fit2 = naiveBayes(DeniedApproved ~ Airport.Name + Airline.Name + Claim.Type, data=tr_dat)
 # compute confusion matrix
 predicts = predict(fit2, newdata=te_dat)
 actuals = te_dat$DeniedApproved
@@ -430,9 +444,9 @@ mean(predicts == actuals)
 ```
 
 ```{r}
-plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,10), col="red4", lwd=2)
 lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
-legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+legend(0.9, 9, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
 ```
 
 ```{r}
@@ -443,24 +457,144 @@ tr_sizes = seq(100, nrow(tr_dat), length.out=10)
 for (tr_size in tr_sizes) {
   tr_dat1 = tr_dat[1:tr_size,]
   tr_actual = tr_dat1$DeniedApproved
-  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+  fit2 = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
 
   # error on training set
-  tr_predicted = predict(fit, tr_dat1)
+  tr_predicted = predict(fit2, tr_dat1)
   err = mean(tr_actual != tr_predicted)
   tr_errs = c(tr_errs, err)
 
   # error on test set
-  te_predicted = predict(fit, te_dat)
+  te_predicted = predict(fit2, te_dat)
   err = mean(te_actual != te_predicted)
   te_errs = c(te_errs, err)
 }
 ```
 
 
+
+```{r}
+plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 2", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
+lines(te_errs, col="blue", type="l")
+legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+```
+
+### Classification Tree Model
+
+The following classification tree model is looking at the data `Claim.Site`, `Claim.Type`, and `Claim.Amount` to determine which combination of factor values will lead to a claim that is `Denied` or `Approved`. 
+
+For this model, it is important to have two possible outcomes, but the data `Disposition` has three results: `Denied`, `Settled`, and `Approve in Full`. For the sake of this classification tree, a new column, `DeniedApproved`, has been created to consolidate `Settled` and `Approve in Full` values into the  `Approved` classification.
+
+```{r}
+splits = split_data(dat, frac=c(3,1))
+tr_dat = splits[[1]]
+te_dat = splits[[2]]
+
+fit = rpart(DeniedApproved ~ Claim.Site + Claim.Type + Claim.Amount, dat = tr_dat, method = "class")
+prp(fit, extra=106, varlen= 0,faclen=0, main = "", box.col = c("paleturquoise", "pink")[fit$frame$yval])
+```
+
+
+#### Classification Tree Assessment
+
+The model created here has an accurace of: `65%`
+>>>>>>> 21f0f6854161c263157aad349222b933bf5fe99c
+
+Through this model we can see that if a claim amount is for less than $200, then it is more likely to be approved. 
+
+If the claim type is a passenger theft, employee loss, or property damage and the incident occured at a bus station, checkpoint, or in motor vehicle, then it is also more likely to be approved.
+
+
+It should be noted that the highest accuracy attained using various predictors is `68%`
+
+This accuracy was attained using the predictors: `Claim.Site`, `Claim.Type`, `Claim.Amount`, `Airline.Name`, and `Item`.
+There are many airlines that seem to be more likely to influence the approval of a claim. Unfortunately, the tree model would need to accomodate dozens of predictors and does not render well. Despite this, a learning curve testing this model is created and displayed below for model assessment.
+
+Furthermore, using the `Airport.Code` did not alter the accuracy of the different models tested, so claim results are not dependent on the airport.
+
+```{r}
+# Test model:
+predicted = predict(fit, te_dat, type = "class")
+actual = te_dat$DeniedApproved
+table(actual, predicted)
+mean(actual == predicted)
+```
+
+#### Learning Curve: `Claim.Site`, `Claim.Type`,  `Claim.Amount`
+
+```{r}
+# Learning curve
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=20)
+
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit = rpart(DeniedApproved ~ Claim.Site + Claim.Type + Claim.Amount, dat = tr_dat1, method = "class")
+  
+  # error on training set
+  tr_predicted = predict(fit, tr_dat1, type="class")
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit, te_dat, type="class")
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+
+# Plot learning curve here
+plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve")
+lines(tr_sizes, te_errs, type = "b", col = "blue")
+legend("bottomright", c("Test Set Error", "Training Set Error"), pch = 1, col = c("blue", "red4"))
+```
+
+This learning curve above further assesses the Classification Tree Model displayed earlier in the project. We can see that the error rate for the test data decreases quickly, then levels off with increased number of data points. The training data error rate increases quickly, then levels to about the same classification error level as the test data error rate. This model is at risk for exhibiting higher bias as the predictors used may generate too general of a model to give accurate predictions.
+
+The learning curve for a more accurate model will also be displayed below.
+
+***
+
+#### Learning Curve: `Claim.Site`, `Claim.Type`,  `Claim.Amount`, `Airline.Name`, `Item`
+
+```{r}
+# Learning curve
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=20)
+
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit = rpart(DeniedApproved ~ Claim.Site + Claim.Type + Claim.Amount + Airline.Name + Item, dat = tr_dat1, method = "class")
+  
+  # error on training set
+  tr_predicted = predict(fit, tr_dat1, type="class")
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit, te_dat, type="class")
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+
+# Plot learning curve here
+plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve")
+lines(tr_sizes, te_errs, type = "b", col = "blue")
+legend("bottomright", c("Test Set Error", "Training Set Error"), pch = 1, col = c("blue", "red4"))
+```
+
+This slightly more accurate model creates a learning curve with a noticeably lower classification error than seen for the previous model. Like the previous learning curve, we can see that the error rate for the test data decreases quickly while the error rate for the training data quickly increases. Both error rates for the training data and test data level off, but with a slight increase as the training set size increases. This model still exhibits some bias, but maybe not as much as the previous mode. The small gap between the error rates of the training data and test data indicate that more data could potentially increase the performance of this model and create more accurate predictions. Ultimately, it can be concluded that the airline associated with a claim and the item in question has more influence over whether a claim is likely to be denied or not.
+
+***
+
 ## Conclusions
 
-```
+```{r}
 #test stuff:
 dat[dat$Claim.Amount == 0, c("Disposition", "Close.Amount", "Claim.Amount")]
 ```
