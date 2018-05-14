@@ -657,6 +657,8 @@ This slightly more accurate model creates a learning curve with a noticeably low
 
 ## Conclusions
 
+Through this project, we have discovered that although there is not a surefire way to scam the TSA claim system, there are ways to improve your chance of getting a claim accepted. Some claim types are more likley to get approved, but it seems that the higher the value of the claim, the lower of a chance it gets approved. 
+
 ```{r}
 #test stuff:
 dat[dat$Claim.Amount == 0, c("Disposition", "Close.Amount", "Claim.Amount")]
