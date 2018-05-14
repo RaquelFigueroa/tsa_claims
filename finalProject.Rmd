@@ -445,6 +445,8 @@ We are using Naive Bayes here to make a prediction on whether or not a claim was
 
 This first model made uses the Claim Amount, Airport Name, and Airline Name as the predictors. 
 
+Airport Name and Airline Name are used as predictors because it is kind of important to know where a claim is from because each airport has its own rules and ways of settling things. Claim Amount was used as the third predictor in order to see if the amount that a person wants from their claim would affect whether or not their claim gets approved.
+
 ```{r}
 # Split the data into training and test with 3:1 ratio
 splits = split_data(dat, frac=c(3,1))
@@ -502,7 +504,9 @@ legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blu
 
 ### Model 2 - Naive Bayes
 
-The second model for Naive Bayes uses the Airport Name and Airline Name again but this time, it switched the Claim Amount to be the Claim Type.
+The second model for Naive Bayes uses the Airport Name and Airline Name again but this time, it switched the Claim Amount to be the Claim Type. 
+
+Airport Name and Airline Name was used because, once again, it's important to know which airport it was exactly and the Claim Type might be the deciding reason why an airline would accept a claim. If the reasoning behind the claim is more severe, then perhaps they are more likely to concede in the claim.
 
 ```{r}
 # Fitting model
@@ -558,6 +562,8 @@ legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blu
 ### Model 3 - Naive Bayes
 
 The third model for Naive Bayes will use both of the first model and second model. This means that the preidctors will be the Airport Name, Airline Name, Claim Type, and Claim Amount.
+
+Using both Claim Type and Claim Amount here would show that perhaps there was a correlation between the two, like how setting a certain Claim Amount based on the claim Type might affect the chances of approval. But with the lower accuracy shown here, then perhaps only the Claim Type has a huge contributing factor.
 
 ```{r}
 # Fitting model
