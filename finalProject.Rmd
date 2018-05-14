@@ -440,7 +440,11 @@ legend('topleft',legend = sites, col=col.sites, pch=19)
 
 ***
 
-## Model 1 - Naive Bayes
+### Model 1 - Naive Bayes
+
+We are using Naive Bayes here to make a prediction on whether or not a claim was approved or denied. Claims that have been settled have been changed to be approved in a separate column because the client has still received some money from it.
+
+This first model made uses the Claim Amount, Airport Name, and Airline Name as the predictors. 
 
 ```{r}
 # Split the data into training and test with 3:1 ratio
@@ -454,18 +458,18 @@ predicts = predict(fit, newdata=te_dat)
 actuals = te_dat$DeniedApproved
 conf_mtx = table(predicts, actuals)
 conf_mtx
-mean(predicts == actuals)
+round(mean(predicts == actuals), 3)
 ```
 
+The accuracy of the first model is around 54%.
 
+The double density plot of this model is shown here.
 
 ```{r}
 plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,20), col="red4", lwd=2)
 lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
 legend(1.4, 18, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
 ```
-
-
 
 ```{r}
 te_errs = c()
@@ -489,13 +493,17 @@ for (tr_size in tr_sizes) {
 }
 ```
 
+The learning curve here appears to show a very high bias situation.
+
 ```{r}
 plot(tr_sizes, tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 1", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.5), col="red", type="b")
 lines(tr_sizes, te_errs, col="blue", type="b")
 legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
 
-## Model 2 - Naive Bayes
+### Model 2 - Naive Bayes
+
+The second model for Naive Bayes uses the Airport Name and Airline Name again but this time, it switched the Claim Amount to be the Claim Type.
 
 ```{r}
 # Fitting model
@@ -505,8 +513,12 @@ predicts = predict(fit2, newdata=te_dat)
 actuals = te_dat$DeniedApproved
 conf_mtx = table(predicts, actuals)
 conf_mtx
-mean(predicts == actuals)
+round(mean(predicts == actuals), 3)
 ```
+
+The accuracy of this second model is slightly better at 62%.
+
+The double density plot of the second model is shown here.
 
 ```{r}
 plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,10), col="red4", lwd=2)
@@ -536,10 +548,65 @@ for (tr_size in tr_sizes) {
 }
 ```
 
-
+The learning curve of the second model also appears to have a high bias but not as much as the first model.
 
 ```{r}
 plot(tr_sizes, tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 2", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.5), col="red", type="b")
+lines(tr_sizes, te_errs, col="blue", type="b")
+legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+```
+
+### Model 3 - Naive Bayes
+
+The third model for Naive Bayes will use both of the first model and second model. This means that the preidctors will be the Airport Name, Airline Name, Claim Type, and Claim Amount.
+
+```{r}
+# Fitting model
+fit3 = naiveBayes(DeniedApproved ~ Airport.Name + Airline.Name + Claim.Type + Claim.Amount, data=tr_dat)
+# compute confusion matrix
+predicts = predict(fit3, newdata=te_dat)
+actuals = te_dat$DeniedApproved
+conf_mtx = table(predicts, actuals)
+conf_mtx
+round(mean(predicts == actuals), 3)
+```
+
+Even with using both models, it appears that the accuracy of the third model is lower than the accuracy of the second model but slightly higher than the first model. The third model is sitting at an accuracy of around 55%.
+
+The double density plot of the third model is shown here.
+
+```{r}
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,10), col="red4", lwd=2)
+lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
+legend(0.9, 9, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+```
+
+```{r}
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=20)
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit3 = naiveBayes(DeniedApproved ~ Airport.Name + Airline.Name + Claim.Type + Claim.Amount, data=tr_dat1)
+
+  # error on training set
+  tr_predicted = predict(fit3, tr_dat1)
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit2, te_dat)
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+```
+
+It appears that the learning curve of the third model has a strangely high variance. The training set error also appearns to be higher than the test set error.
+
+```{r}
+plot(tr_sizes, tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 3", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.5), col="red", type="b")
 lines(tr_sizes, te_errs, col="blue", type="b")
 legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
