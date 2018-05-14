@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(prompt=TRUE, comment="", echo=TRUE)
 library(rpart)
 library(rpart.plot)
+library(e1071)
 dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
 source("https://raw.githubusercontent.com/grbruns/cst383/master/lin-regr-util.R")
 set.seed(123)
@@ -275,11 +276,12 @@ dat = dat[keepRows,]
 # Delete remaining rows where Claim.Amount is `0`
 keepRows = dat$Claim.Amount > 0
 dat = dat[keepRows,]
+
+# Change Settle and Approve to Full to Approved for Predictions
+dat$DeniedApproved = factor(ifelse(dat$Disposition == "Denied", "denied", "Approved"))
 ```
 
 ***
-
-
 
 ## Data exploration and visualization
 
@@ -441,17 +443,117 @@ legend('topleft',legend = sites, col=col.sites, pch=19)
 
 ***
 
+## Model 1 - Naive Bayes
+
+```{r}
+# Split the data into training and test with 3:1 ratio
+splits = split_data(dat, frac=c(3,1))
+tr_dat = splits[[1]]
+te_dat = splits[[2]]
+# fitting model
+fit = naiveBayes(DeniedApproved ~ Claim.Amount + Airport.Name + Airline.Name, data=tr_dat)
+# compute confusion matrix
+predicts = predict(fit, newdata=te_dat)
+actuals = te_dat$DeniedApproved
+conf_mtx = table(predicts, actuals)
+conf_mtx
+mean(predicts == actuals)
+```
+
+
+
+```{r}
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
+lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
+legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+```
+
+
+
+```{r}
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(1000, nrow(tr_dat), length.out=1000)
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat1)
+
+  # error on training set
+  tr_predicted = predict(fit, tr_dat1)
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit, te_dat)
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+```
+
+```{r}
+plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 1", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
+lines(te_errs, col="blue", type="l")
+legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+```
+
+## Model 2 - Naive Bayes
+
+```{r}
+# Fitting model
+fit2 = naiveBayes(DeniedApproved ~ Airport.Name + Airline.Name + Claim.Type, data=tr_dat)
+# compute confusion matrix
+predicts = predict(fit2, newdata=te_dat)
+actuals = te_dat$DeniedApproved
+conf_mtx = table(predicts, actuals)
+conf_mtx
+mean(predicts == actuals)
+```
+
+```{r}
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,10), col="red4", lwd=2)
+lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
+legend(0.9, 9, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+```
+
+```{r}
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=10)
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit2 = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+
+  # error on training set
+  tr_predicted = predict(fit2, tr_dat1)
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit2, te_dat)
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+```
+
+
+
+```{r}
+plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 2", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
+lines(te_errs, col="blue", type="l")
+legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+```
+
 ### Classification Tree Model
 
 The following classification tree model is looking at the data `Claim.Site`, `Claim.Type`, and `Claim.Amount` to determine which combination of factor values will lead to a claim that is `Denied` or `Approved`. 
 
 For this model, it is important to have two possible outcomes, but the data `Disposition` has three results: `Denied`, `Settled`, and `Approve in Full`. For the sake of this classification tree, a new column, `DeniedApproved`, has been created to consolidate `Settled` and `Approve in Full` values into the  `Approved` classification.
 
-
-
 ```{r}
-source("https://raw.githubusercontent.com/grbruns/cst383/master/lin-regr-util.R")
-dat$DeniedApproved = factor(ifelse(dat$Disposition == "Denied", "Denied", "Approved"))
 splits = split_data(dat, frac=c(3,1))
 tr_dat = splits[[1]]
 te_dat = splits[[2]]
@@ -464,6 +566,7 @@ prp(fit, extra=106, varlen= 0,faclen=0, main = "", box.col = c("paleturquoise", 
 #### Classification Tree Assessment
 
 The model created here has an accurace of: `65%`
+>>>>>>> 21f0f6854161c263157aad349222b933bf5fe99c
 
 Through this model we can see that if a claim amount is for less than $200, then it is more likely to be approved. 
 
