@@ -395,9 +395,9 @@ mean(predicts == actuals)
 
 
 ```{r}
-plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,20), col="red4", lwd=2)
 lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
-legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+legend(1.4, 18, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
 ```
 
 
@@ -406,11 +406,11 @@ legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","bl
 te_errs = c()
 tr_errs = c()
 te_actual = te_dat$DeniedApproved
-tr_sizes = seq(1000, nrow(tr_dat), length.out=1000)
+tr_sizes = seq(100, nrow(tr_dat), length.out=20)
 for (tr_size in tr_sizes) {
   tr_dat1 = tr_dat[1:tr_size,]
   tr_actual = tr_dat1$DeniedApproved
-  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat1)
+  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Airport.Name + Airline.Name, data=tr_dat1)
 
   # error on training set
   tr_predicted = predict(fit, tr_dat1)
@@ -425,9 +425,9 @@ for (tr_size in tr_sizes) {
 ```
 
 ```{r}
-plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 1", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
-lines(te_errs, col="blue", type="l")
-legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+plot(tr_sizes, tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 1", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.5), col="red", type="b")
+lines(tr_sizes, te_errs, col="blue", type="b")
+legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
 
 ## Model 2 - Naive Bayes
@@ -453,11 +453,11 @@ legend(0.9, 9, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blu
 te_errs = c()
 tr_errs = c()
 te_actual = te_dat$DeniedApproved
-tr_sizes = seq(100, nrow(tr_dat), length.out=10)
+tr_sizes = seq(100, nrow(tr_dat), length.out=20)
 for (tr_size in tr_sizes) {
   tr_dat1 = tr_dat[1:tr_size,]
   tr_actual = tr_dat1$DeniedApproved
-  fit2 = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+  fit2 = naiveBayes(DeniedApproved ~ Airport.Name + Airline.Name + Claim.Type, data=tr_dat1)
 
   # error on training set
   tr_predicted = predict(fit2, tr_dat1)
@@ -474,9 +474,9 @@ for (tr_size in tr_sizes) {
 
 
 ```{r}
-plot(tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 2", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.4), col="red", type="l")
-lines(te_errs, col="blue", type="l")
-legend(1.6, 0.4, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
+plot(tr_sizes, tr_errs, main="Learning Curve for Naive Bayes Approval/Denial - Model 2", xlab="Training Set Size", ylab="Error", ylim=c(0.15,0.5), col="red", type="b")
+lines(tr_sizes, te_errs, col="blue", type="b")
+legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
 
 ### Classification Tree Model
@@ -498,7 +498,6 @@ prp(fit, extra=106, varlen= 0,faclen=0, main = "", box.col = c("paleturquoise", 
 #### Classification Tree Assessment
 
 The model created here has an accurace of: `65%`
->>>>>>> 21f0f6854161c263157aad349222b933bf5fe99c
 
 Through this model we can see that if a claim amount is for less than $200, then it is more likely to be approved. 
 
