@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(prompt=TRUE, comment="", echo=TRUE)
 library(rpart)
 library(rpart.plot)
+library(e1071)
 dat = read.csv("https://raw.githubusercontent.com/RaquelFigueroa/tsa_claims/master/tsa_claims.csv")
 ```
 
@@ -273,6 +274,11 @@ dat = dat[keepRows,]
 # Delete remaining rows where Claim.Amount is `0`
 keepRows = dat$Claim.Amount > 0
 dat = dat[keepRows,]
+
+# Change Settle and Approve to Full to Approved for Predictions
+dat$DeniedApproved = factor(ifelse(dat$Disposition == "Denied", "denied", "Approved"))
+
+set.seed(123)
 ```
 
 ***
@@ -361,6 +367,96 @@ legend('topleft',legend = sites, col=col.sites, pch=19)
 
 ***
 >>>>>>> 4321dbb2dcc550d83447bcb125fada4ab49d72b0
+
+## Model 1 - Naive Bayes
+
+```{r}
+# Split the data into training and test with 8:2 ratio
+n = nrow(dat)
+tr_rows = sample(1:n, 0.8*n)
+tr_dat = dat[tr_rows,]
+te_dat = dat[-tr_rows,]
+# fitting model
+fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+# compute confusion matrix
+predicts = predict(fit, newdata=te_dat)
+actuals = te_dat$DeniedApproved
+conf_mtx = table(predicts, actuals)
+conf_mtx
+mean(predicts == actuals)
+```
+
+```{r}
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
+lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
+legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+```
+
+
+
+```{r}
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=10)
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+
+  # error on training set
+  tr_predicted = predict(fit, tr_dat1)
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit, te_dat)
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+```
+
+## Model 2 - Naive Bayes
+
+```{r}
+# Fitting model
+fit2 = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+# compute confusion matrix
+predicts = predict(fit2, newdata=te_dat)
+actuals = te_dat$DeniedApproved
+conf_mtx = table(predicts, actuals)
+conf_mtx
+mean(predicts == actuals)
+```
+
+```{r}
+plot(density(as.numeric(predicts[actuals=="Approved"])), main="Double Density Plot", xlab="Approval Output", ylab="Density", ylim=c(0,70), col="red4", lwd=2)
+lines(density(as.numeric(predicts[actuals=="denied"])), col="blue", lwd=2)
+legend(0.9, 65, c("Approved", "Denied"), lty=c(1,1), lwd=c(2,2),col=c("red4","blue"))
+```
+
+```{r}
+te_errs = c()
+tr_errs = c()
+te_actual = te_dat$DeniedApproved
+tr_sizes = seq(100, nrow(tr_dat), length.out=10)
+for (tr_size in tr_sizes) {
+  tr_dat1 = tr_dat[1:tr_size,]
+  tr_actual = tr_dat1$DeniedApproved
+  fit = naiveBayes(DeniedApproved ~ Claim.Amount + Close.Amount + Airport.Name + Airline.Name, data=tr_dat)
+
+  # error on training set
+  tr_predicted = predict(fit, tr_dat1)
+  err = mean(tr_actual != tr_predicted)
+  tr_errs = c(tr_errs, err)
+
+  # error on test set
+  te_predicted = predict(fit, te_dat)
+  err = mean(te_actual != te_predicted)
+  te_errs = c(te_errs, err)
+}
+```
+
 
 ## Conclusions
 
