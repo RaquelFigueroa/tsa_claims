@@ -439,7 +439,7 @@ legend('topleft',legend = sites, col=col.sites, pch=19)
 
 ***
 
-## Model 1 - Naive Bayes
+### Model 1 - Naive Bayes
 
 ```{r}
 # Split the data into training and test with 3:1 ratio
@@ -494,7 +494,7 @@ lines(tr_sizes, te_errs, col="blue", type="b")
 legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
 
-## Model 2 - Naive Bayes
+### Model 2 - Naive Bayes
 
 ```{r}
 # Fitting model
@@ -543,7 +543,8 @@ lines(tr_sizes, te_errs, col="blue", type="b")
 legend(20000, 0.3, c("Training Set Error", "Test Set Error"), fill=c("red", "blue"))
 ```
 
-### Classification Tree Model
+
+### Model 4 - Classification Tree Model
 
 The following classification tree model is looking at the data `Claim.Site`, `Claim.Type`, and `Claim.Amount` to determine which combination of factor values will lead to a claim that is `Denied` or `Approved`. 
 
@@ -561,7 +562,7 @@ prp(fit, extra=106, varlen= 0,faclen=0, main = "", box.col = c("paleturquoise", 
 
 #### Classification Tree Assessment
 
-The model created here has an accurace of: `65%`
+The model created here has an accuracy of: `65%`
 
 Through this model we can see that if a claim amount is for less than $200, then it is more likely to be approved. 
 
@@ -609,7 +610,7 @@ for (tr_size in tr_sizes) {
 }
 
 # Plot learning curve here
-plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve")
+plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve - Classification Tree")
 lines(tr_sizes, te_errs, type = "b", col = "blue")
 legend("bottomright", c("Test Set Error", "Training Set Error"), pch = 1, col = c("blue", "red4"))
 ```
@@ -646,7 +647,7 @@ for (tr_size in tr_sizes) {
 }
 
 # Plot learning curve here
-plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve")
+plot(tr_sizes, tr_errs , type = "b", ylim = c(0, 0.5), col = "red4", xlab = "Training Set Size", ylab = "Classification Error", main = "Learning Curve - Classification Tree")
 lines(tr_sizes, te_errs, type = "b", col = "blue")
 legend("bottomright", c("Test Set Error", "Training Set Error"), pch = 1, col = c("blue", "red4"))
 ```
@@ -655,9 +656,9 @@ This slightly more accurate model creates a learning curve with a noticeably low
 
 ***
 
-## Conclusions
+## Conclusion
 
-```{r}
-#test stuff:
-dat[dat$Claim.Amount == 0, c("Disposition", "Close.Amount", "Claim.Amount")]
-```
+Through this investigation of the TSA Claims data set, it can be concluded that there are many combinations of factors that contribute to the likelihood of a claim approval. Interestingly, it was hypothesized that the airport location may have a big impact on claim results. It turns out that this not case. There is a greater connection between the airline and claim results than between the airport and the final results. 
+
+Another important predictor is the amount of which the claim is filed. A claim requesting a reimbursement of an amount less than $200 is more likely to be approved than an amount greater than $200. If the claim amount is greater than $200, then other predictors can be taken into account to determine the likelihood of an approved claim. Some of these predictors include the type of claim and the site where the property was damaged or lost. It seems like property damage that occured in baggage that was checked-in is very unlikely to be approved. This could be due to the possibility that this sort of property damage is likely to be handled by travel insurance and not by the TSA. 
+
