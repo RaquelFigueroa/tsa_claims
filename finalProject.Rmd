@@ -327,8 +327,7 @@ byType = prop.table(table(dat$Status,dat$Claim.Type),2)
 byType = byType[,c(-1,-2,-3)]
 
 par(mar=c(5,12,4,2))
-barplot(byType, main="Car Distribution by Gears and VS",
-  xlab="Percentage of Claims
+barplot(byType, main="Percentage of Claim Stati",xlab="Percentage of Claims
   Green = Approved, Yellow = Settled, Red = Denied", col=c("green","red4","yellow"), beside=TRUE, horiz=TRUE, las=1)
 
 ```
