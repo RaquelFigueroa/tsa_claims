@@ -321,10 +321,75 @@ byType = byType[,c(-1,-2,-3)]
 par(mar=c(5,12,4,2))
 barplot(byType, main="Car Distribution by Gears and VS",
   xlab="Percentage of Claims
-  Green = Approved, Yellow = Settled, Red = Denied", col=c("green","yellow","red4"), beside=TRUE, horiz=TRUE, las=1)
+  Green = Approved, Yellow = Settled, Red = Denied", col=c("green","red4","yellow"), beside=TRUE, horiz=TRUE, las=1)
 
 ```
-I decided to exclude Complaint, Employee Loss, and Motor Vehicle claims from this graph because they dont relate to the type of claims that someone trying to scam the system would make. In this graph we see that not many claims get fully approved when you claim for personal injury but many get settled. 
+I decided to exclude Complaint, Employee Loss, and Motor Vehicle claims from this graph because they dont relate to the type of claims that someone trying to scam the system would make. In this graph we see that many claims are denied. Some types of claims have a very low chance of approval, but it seems that a claim about property damage has a much higher chance of approval versus other types. In this and the passanger theft claim type cases, individually the approved and the settled percentages are less than denied, but if you consider that settling is still getting some reward, a fradululent claim has over 50% chance of getting a payout. 
+
+***
+
+In the previous section, we have discovered the percentage of times differnt claim types are accepted, settled, or denied. Now knowing those numbers, we can caluclate what would be the biggest bang for the buck.
+
+
+```{r}
+app = dat$Status == "Approved"
+dapp = dat[app,c("Close.Amount","Claim.Type")]
+numByType = as.data.frame.matrix(byType)
+expectedReturn = apply(dat, 1, function(x){
+  expect = 0
+  if (x["Status"] == "Approved"){
+    if(x["Claim.Type"] == "Passenger Property Loss") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[1,1]
+    }
+    else if(x["Claim.Type"] == "Passenger Theft") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[1,2]
+    }
+    else if(x["Claim.Type"] == "Personal Injury") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[1,3]
+    }
+    else if(x["Claim.Type"] == "Property Damage") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[1,4]
+    }
+  }
+  else if (x["Status"] == "Settled"){
+    if(x["Claim.Type"] == "Passenger Property Loss") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[3,1]
+    }
+    else if(x["Claim.Type"] == "Passenger Theft") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[3,2]
+    }
+    else if(x["Claim.Type"] == "Personal Injury") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[3,3]
+    }
+    else if(x["Claim.Type"] == "Property Damage") {
+      expect = as.numeric(x["Close.Amount"]) * numByType[3,4]
+    }
+  }
+  expect
+})
+dat$expectedReturn = expectedReturn
+
+```
+
+We took the percentage of times claims of that type were approved and settled and applied that to the close amount. This gives us a list of "Expected Returns" from the claims we have. Now below is a graph showing the expected returns from each of the claim types.
+
+```{r}
+
+app.set = dat$Status == "Approved" | dat$Status == "Settled"
+ppl = mean(dat[ app.set & dat$Claim.Type == "Passenger Property Loss" , ]$expectedReturn)
+pt = mean(dat[app.set & dat$Claim.Type == "Passenger Theft", ]$expectedReturn)
+pd = mean(dat[app.set & dat$Claim.Type == "Property Damage" , ]$expectedReturn)
+pi = mean(dat[app.set & dat$Claim.Type == "Personal Injury" , ]$expectedReturn)
+vals = c(ppl,pt,pd,pi)
+names(vals) = c("Passenger Property Loss","Passenger Theft","Property Damage","Personal Injury")
+par(mar=c(5,10.5,4,2))
+barplot(vals, main="Expected Return from Claim", xlab = "Dollars", col=c("blue","green","yellow","red4"), horiz=TRUE, las=1)
+
+
+
+```
+
+We can see here that the most lucrative of all the claims, based on the percentage of time that the claims get approved and settled and the mean amount they get approved and settled for, are personal injury claims. This makes sense, as people suing for injuries anywhere tend to sue for exorbitant amounts. The next highest, Passenger Theft, would make sense to be the second highest as people will claim higher amounts for goods stolen, even if the item was actually not worth that much. The second lowest amount for property damage makes sense as you cannot claim as much because the item is still there. If the whole item was gone like in theft or loss you could claim more. The lowest out of all of the types of claims are the passenger property loss ones. Claims for loss ussually are smaller than claims for theft, and the average close amount is also smaller. In addition to having small claims, they have the second highest denial rating under personal injury claims. This combination of the two factors results in an extremely low expected return. 
 
 
 ***
